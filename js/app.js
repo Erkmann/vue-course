@@ -1,10 +1,14 @@
 new Vue({
     el: '#app',
     data: {
+        isShowingCart: false,
+        cart: {
+          items: []
+        },
         products: [
             {
                 id: 1,
-                name: 'MacBook Pro (15 inch)',
+                name: 'MacBook Proitems (15 inch)',
                 description: 'This laptop has a super crisp Retina display. Yes, we know that it\'s overpriced...',
                 price: 2999,
                 inStock: 50
@@ -46,6 +50,72 @@ new Vue({
             }
         ]
     },
+    methods: {
+        addProductToCart(product) {
+            var cartItem = this.getCartItem(product);
+
+            if (cartItem != null){
+                cartItem.quantity++;
+            }
+            else {
+                this.cart.items.push({
+                    product: product,
+                    quantity: 1
+                });
+            }
+
+            product.inStock --
+        },
+        getCartItem(product){
+            for(let i = 0; i < this.cart.items.length; i++){
+                if (product.id === this.cart.items[i].product.id){
+                    return this.cart.items[i];
+                }
+            }
+            return null;
+        },
+        increaseQuantity(cartItem){
+            cartItem.product.inStock--;
+            cartItem.quantity++;
+        },
+        removeItemFromCart(cartItem){
+            let index = this.cart.items.indexOf(cartItem);
+
+            if (index !== -1){
+                this.cart.items.splice(index, 1);
+            }
+        },
+        decreaseQuantity(cartItem){
+            cartItem.product.inStock++;
+            cartItem.quantity--;
+            if (cartItem.quantity <= 0){
+                this.removeItemFromCart(cartItem);
+            }
+        },
+        checkout(){
+            if (confirm('Are you sure you want to checkout?')){
+                this.cart.items.forEach(function (item){
+                    item.product.inStock += item.quantity;
+                })
+
+                this.cart.items = []
+            }
+        }
+    },
+    computed: {
+        cartTotal(){
+            let total = 0;
+            this.cart.items.forEach(function (item){
+                total += item.quantity * item.product.price;
+            })
+
+            return total
+        },
+
+        taxAmount(){
+            return (this.cartTotal * 10) / 100;
+        }
+    },
     filters: {
         currency: function (value){
             var formatter = Intl.NumberFormat('pt-BR', {
@@ -57,5 +127,4 @@ new Vue({
             return formatter.format(value);
         }
     }
-
 });
